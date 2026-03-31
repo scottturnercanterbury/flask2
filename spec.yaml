@@ -1,0 +1,228 @@
+penapi: 3.1.0
+info:
+  title: Musical Meme Payroll Management System
+  version: 1.0.0
+  description: >-
+    A simple Flask-based payroll management application for managing employee
+    records with salary tracking. This service is primarily HTML-rendering
+    (server-side templates) and uses form submissions rather than JSON APIs.
+servers:
+  - url: http://localhost:5000
+tags:
+  - name: Employees
+    description: Employee payroll records
+paths:
+  /:
+    get:
+      tags:
+        - Employees
+      summary: List employees
+      description: Renders a page listing all employee salary records.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: HTML page containing employee list
+          content:
+            text/html:
+              schema:
+                type: string
+  /employees/add:
+    get:
+      tags:
+        - Employees
+      summary: Show add employee form
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: HTML form to add an employee
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      tags:
+        - Employees
+      summary: Add an employee
+      description: Creates a new employee record from HTML form fields.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreateForm'
+      responses:
+        '302':
+          description: Employee created; redirects to the employee list
+          headers:
+            Location:
+              description: Redirect target (typically "/")
+              schema:
+                type: string
+        '400':
+          description: Validation error; re-renders form with error message(s)
+          content:
+            text/html:
+              schema:
+                type: string
+  /employees/{emp_id}:
+    get:
+      tags:
+        - Employees
+      summary: View an employee
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EmployeeId'
+      responses:
+        '200':
+          description: HTML page containing employee details
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /employees/{emp_id}/edit:
+    get:
+      tags:
+        - Employees
+      summary: Show edit employee form
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EmployeeId'
+      responses:
+        '200':
+          description: HTML form to edit an employee
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Employees
+      summary: Update an employee
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EmployeeId'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdateForm'
+      responses:
+        '302':
+          description: Employee updated; redirects to the employee detail page
+          headers:
+            Location:
+              description: Redirect target (typically "/employees/{emp_id}")
+              schema:
+                type: string
+        '400':
+          description: Validation error; re-renders form with error message(s)
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /employees/{emp_id}/delete:
+    post:
+      tags:
+        - Employees
+      summary: Delete an employee
+      description: Deletes the employee record identified by `emp_id`.
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EmployeeId'
+      responses:
+        '302':
+          description: Employee deleted; redirects to the employee list
+          headers:
+            Location:
+              description: Redirect target (typically "/")
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  parameters:
+    EmployeeId:
+      name: emp_id
+      in: path
+      required: true
+      description: Employee numeric identifier.
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    Employee:
+      type: object
+      description: Employee payroll record stored in SQLite.
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+        salary_gbp_pence:
+          type: integer
+          minimum: 0
+          description: Salary stored as integer pence (GBP * 100).
+      required:
+        - id
+        - name
+        - salary_gbp_pence
+    EmployeeCreateForm:
+      type: object
+      description: Form fields used by POST /employees/add.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        salary:
+          type: string
+          minLength: 1
+          description: >-
+            Salary input as a string, e.g. "35000", "35000.00", "£35,000.00".
+            The server validates and converts this to integer pence.
+      required:
+        - name
+        - salary
+    EmployeeUpdateForm:
+      type: object
+      description: Form fields used by POST /employees/{emp_id}/edit.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        salary:
+          type: string
+          minLength: 1
+          description: >-
+            Salary input as a string, e.g. "35000", "35000.00", "£35,000.00".
+            The server validates and converts this to integer pence.
+      required:
+        - name
+        - salary
+  responses:
+    NotFound:
+      description: The requested employee record does not exist.
+      content:
+        text/html:
+          schema:
+            type: string
