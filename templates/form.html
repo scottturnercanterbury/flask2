@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Employee Form</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post">
+<label>Name</label>
+<input name="name" value="{{ form.get('name','') }}">
+<label>Salary</label>
+<input name="salary" value="{{ form.get('salary','') }}">
+<button type="submit">Submit</button>
+</form>
+<a href="{{ url_for('list_employees') }}">Back</a>
+{% endblock %}

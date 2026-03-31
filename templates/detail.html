@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Employee Details</h1>
+<p>ID: {{ employee.id }}</p>
+<p>Name: {{ employee.name }}</p>
+<p>Salary: {{ format_salary(employee.salary_gbp_pence) }}</p>
+<a href="{{ url_for('edit_employee', emp_id=employee.id) }}">Edit</a>
+<a href="{{ url_for('list_employees') }}">Back</a>
+{% endblock %}
